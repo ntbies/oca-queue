@@ -433,7 +433,11 @@ class QueueJobRunner:
     def initialize_databases(self):
         for db_name in sorted(self.get_db_names()):
             # sorting is important to avoid deadlocks in acquiring the master lock
-            db = Database(db_name)
+            try:
+                db = Database(db_name)
+            except Exception as e:
+                _logger.warning(e)
+                continue
             if db.has_queue_job:
                 self.db_by_name[db_name] = db
                 with db.select_jobs("state in %s", (NOT_DONE,)) as cr:
